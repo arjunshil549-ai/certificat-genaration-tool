@@ -1,6 +1,6 @@
 # Certificate Generation App
 
-This repository contains a photo-to-poem application that generates certificates from images. 
+This repository contains a certificate generation application. 
 
 ## Installation
 
