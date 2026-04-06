@@ -1,0 +1,13 @@
+{
+  "name": "FalconSec Standard",
+  "description": "Standard FalconSec Intelligence certificate",
+  "config": {
+    "backgroundColor": "#ffffff",
+    "primaryColor": "#1a237e",
+    "accentColor": "#c62828",
+    "fontFamily": "Helvetica",
+    "borderStyle": "double",
+    "logoUrl": null,
+    "watermark": "FALCONSEC INTELLIGENCE"
+  }
+}
