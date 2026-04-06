@@ -36,13 +36,22 @@ app.use(helmet({
 }));
 app.use(cors());
 
-// Rate limiting
+// Rate limiting for API routes
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
   message: { success: false, message: 'Too many requests, please try again later.' },
 });
 app.use('/api/', limiter);
+
+// Generous rate limit for frontend routes (prevents resource exhaustion)
+const frontendLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 500,
+  standardHeaders: false,
+  legacyHeaders: false,
+});
+app.use('/', frontendLimiter);
 
 // Body parsing
 app.use(express.json({ limit: '10mb' }));

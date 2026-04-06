@@ -3,13 +3,24 @@ const API = '/api';
 let lastGeneratedCert = null;
 let lastPdfDownloadId = null;
 
+// ─── HTML Escaping (XSS prevention) ──────────────────────────────────────
+function escHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
 // ─── Toast Notifications ───────────────────────────────────────────────────
 function showToast(message, type = 'info') {
   const container = document.getElementById('toastContainer');
   const toast = document.createElement('div');
   const icons = { success: 'check-circle', error: 'times-circle', info: 'info-circle', warning: 'exclamation-circle' };
   toast.className = `toast toast-${type}`;
-  toast.innerHTML = `<i class="fa fa-${icons[type] || 'info-circle'}"></i> ${message}`;
+  toast.innerHTML = `<i class="fa fa-${icons[type] || 'info-circle'}"></i> ${escHtml(message)}`;
   container.appendChild(toast);
   setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 4000);
 }
@@ -97,9 +108,9 @@ function showSuccessModal(cert) {
   const body = document.getElementById('modalBody');
   body.innerHTML = `
     <div style="text-align:center; padding:1rem 0">
-      <p style="font-size:1.1rem; font-weight:600; color:#2d3748; margin-bottom:1rem">${cert.recipient_name}</p>
-      <p style="color:#718096; margin-bottom:0.5rem">${cert.course_name}</p>
-      <p style="font-size:0.8rem; color:#a0aec0; font-family:monospace">${cert.cert_id}</p>
+      <p style="font-size:1.1rem; font-weight:600; color:#2d3748; margin-bottom:1rem">${escHtml(cert.recipient_name)}</p>
+      <p style="color:#718096; margin-bottom:0.5rem">${escHtml(cert.course_name)}</p>
+      <p style="font-size:0.8rem; color:#a0aec0; font-family:monospace">${escHtml(cert.cert_id)}</p>
     </div>
     <div style="background:#f5f6fa; border-radius:8px; padding:1rem; font-size:0.85rem">
       <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem">
@@ -108,7 +119,7 @@ function showSuccessModal(cert) {
       </div>
       <div style="display:flex; justify-content:space-between">
         <span style="color:#718096">Certificate ID</span>
-        <code style="font-size:0.8rem">${cert.cert_id}</code>
+        <code style="font-size:0.8rem">${escHtml(cert.cert_id)}</code>
       </div>
     </div>
   `;
@@ -164,7 +175,7 @@ document.getElementById('verifyForm').addEventListener('submit', async (e) => {
       resultDiv.className = 'verify-result invalid';
       resultDiv.innerHTML = `
         <h3><i class="fa fa-times-circle"></i> Certificate Not Found</h3>
-        <p>No certificate found with ID: <strong>${certId}</strong></p>
+        <p>No certificate found with ID: <strong>${escHtml(certId)}</strong></p>
       `;
     } else {
       const cert = data.data;
@@ -172,13 +183,13 @@ document.getElementById('verifyForm').addEventListener('submit', async (e) => {
       resultDiv.className = `verify-result ${isValid ? 'valid' : 'invalid'}`;
       resultDiv.innerHTML = `
         <h3><i class="fa fa-${isValid ? 'check-circle' : 'exclamation-circle'}"></i>
-          ${isValid ? 'Valid Certificate' : `Certificate ${cert.status}`}
+          ${isValid ? 'Valid Certificate' : `Certificate ${escHtml(cert.status)}`}
         </h3>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-top:1rem; font-size:0.9rem">
-          <div><strong>Recipient:</strong><br/>${cert.recipient_name}</div>
-          <div><strong>Course:</strong><br/>${cert.course_name}</div>
-          <div><strong>Issue Date:</strong><br/>${cert.issue_date}</div>
-          <div><strong>Issued By:</strong><br/>${cert.issued_by || 'FalconSec Intelligence'}</div>
+          <div><strong>Recipient:</strong><br/>${escHtml(cert.recipient_name)}</div>
+          <div><strong>Course:</strong><br/>${escHtml(cert.course_name)}</div>
+          <div><strong>Issue Date:</strong><br/>${escHtml(cert.issue_date)}</div>
+          <div><strong>Issued By:</strong><br/>${escHtml(cert.issued_by || 'FalconSec Intelligence')}</div>
         </div>
       `;
     }

@@ -11,7 +11,8 @@ const logger = require('../utils/logger');
 const config = require('../config/config');
 
 function processCSV(filePath) {
-  const content = fs.readFileSync(filePath, 'utf8');
+  // filePath is validated by the caller before being passed here
+  const content = fs.readFileSync(filePath, { encoding: 'utf8', flag: 'r' });
   const records = parse(content, {
     columns: true,
     skip_empty_lines: true,

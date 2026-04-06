@@ -79,7 +79,7 @@ function runMigrations() {
     db.prepare(
       `INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, 'admin')`
     ).run(config.admin.username, config.admin.email, passwordHash);
-    logger.info(`Admin user '${config.admin.username}' created`);
+    logger.info('Admin user created successfully');
   }
 
   // Seed default template

@@ -77,6 +77,14 @@ const batchGenerate = async (req, res, next) => {
     const originalname = req.file.originalname.toLowerCase();
     const mimetype = req.file.mimetype;
 
+    // Validate that the file path is within the uploads directory (path injection prevention)
+    const uploadDir = path.resolve(process.cwd(), 'uploads');
+    const resolvedPath = path.resolve(filePath);
+    if (!resolvedPath.startsWith(uploadDir + path.sep) && resolvedPath !== uploadDir) {
+      try { fs.unlinkSync(filePath); } catch (e) { /* ignore */ }
+      return res.status(400).json({ success: false, message: 'Invalid file path' });
+    }
+
     let records;
     if (originalname.endsWith('.csv') || mimetype === 'text/csv') {
       records = processCSV(filePath);
