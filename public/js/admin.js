@@ -45,9 +45,11 @@ async function apiFetch(path, options = {}) {
 function showToast(message, type = 'info') {
   const container = document.getElementById('toastContainer');
   const toast = document.createElement('div');
-  const icons = { success: 'check-circle', error: 'times-circle', info: 'info-circle', warning: 'exclamation-circle' };
-  toast.className = `toast toast-${type}`;
-  toast.innerHTML = `<i class="fa fa-${icons[type] || 'info-circle'}"></i> ${message}`;
+  const allowedTypes = { success: 'check-circle', error: 'times-circle', info: 'info-circle', warning: 'exclamation-circle' };
+  const safeType = allowedTypes[type] ? type : 'info';
+  const icon = allowedTypes[safeType];
+  toast.className = `toast toast-${safeType}`;
+  toast.innerHTML = `<i class="fa fa-${icon}"></i> ${escHtml(message)}`;
   container.appendChild(toast);
   setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 4000);
 }
@@ -251,30 +253,43 @@ function renderCertsTable(certs) {
         <div style="font-size:0.75rem; color:var(--text-muted)">${escHtml(c.recipient_email)}</div>
       </td>
       <td>${escHtml(c.course_name)}</td>
-      <td style="font-size:0.8rem">${c.issue_date}</td>
-      <td><span class="badge badge-${c.status}">${c.status}</span></td>
+      <td style="font-size:0.8rem">${escHtml(c.issue_date)}</td>
+      <td><span class="badge badge-${escHtml(c.status)}">${escHtml(c.status)}</span></td>
       <td>
         <div class="row-actions">
-          <button class="btn btn-sm btn-secondary" onclick="downloadCert(${c.id}, '${c.cert_id}')">
+          <button class="btn btn-sm btn-secondary cert-download-btn" data-id="${Number(c.id)}" data-cert-id="${escHtml(c.cert_id)}">
             <i class="fa fa-download"></i>
           </button>
-          <button class="btn btn-sm btn-danger" onclick="deleteCert(${c.id})">
+          <button class="btn btn-sm btn-danger cert-delete-btn" data-id="${Number(c.id)}">
             <i class="fa fa-trash"></i>
           </button>
         </div>
       </td>
     </tr>
   `).join('');
+
+  // Attach event listeners after rendering (event delegation alternative)
+  tbody.querySelectorAll('.cert-download-btn').forEach(btn => {
+    btn.addEventListener('click', () => downloadCert(btn.dataset.id, btn.dataset.certId));
+  });
+  tbody.querySelectorAll('.cert-delete-btn').forEach(btn => {
+    btn.addEventListener('click', () => deleteCert(btn.dataset.id));
+  });
 }
 
 function renderPagination(pagination, onPage) {
   const container = document.getElementById('certsPagination');
   if (!pagination || pagination.pages <= 1) { container.innerHTML = ''; return; }
-  let html = '';
+  const buttons = [];
   for (let i = 1; i <= pagination.pages; i++) {
-    html += `<button class="${i === pagination.page ? 'active' : ''}" onclick="(${onPage})(${i})">${i}</button>`;
+    const btn = document.createElement('button');
+    btn.textContent = i;
+    if (i === pagination.page) btn.className = 'active';
+    btn.addEventListener('click', () => onPage(i));
+    buttons.push(btn);
   }
-  container.innerHTML = html;
+  container.innerHTML = '';
+  buttons.forEach(b => container.appendChild(b));
 }
 
 // New cert form toggle
@@ -440,17 +455,22 @@ async function loadTemplates() {
       <h4>${escHtml(t.name)}</h4>
       <p>${escHtml(t.description || 'No description')}</p>
       <div class="template-colors">
-        <div class="color-swatch" style="background:${t.config?.primaryColor || '#1a237e'}" title="Primary"></div>
-        <div class="color-swatch" style="background:${t.config?.accentColor || '#c62828'}" title="Accent"></div>
+        <div class="color-swatch" style="background:${escHtml(t.config?.primaryColor || '#1a237e')}" title="Primary"></div>
+        <div class="color-swatch" style="background:${escHtml(t.config?.accentColor || '#c62828')}" title="Accent"></div>
       </div>
       <div class="template-actions">
         <span class="badge ${t.is_active ? 'badge-active' : 'badge-revoked'}">${t.is_active ? 'Active' : 'Inactive'}</span>
-        <button class="btn btn-sm btn-danger" onclick="deleteTemplate(${t.id})">
+        <button class="btn btn-sm btn-danger template-delete-btn" data-id="${Number(t.id)}">
           <i class="fa fa-trash"></i>
         </button>
       </div>
     </div>
   `).join('');
+
+  // Attach event listeners after rendering
+  grid.querySelectorAll('.template-delete-btn').forEach(btn => {
+    btn.addEventListener('click', () => deleteTemplate(btn.dataset.id));
+  });
 }
 
 async function deleteTemplate(id) {
@@ -490,16 +510,21 @@ async function loadUsers() {
     <tr>
       <td style="font-weight:600">${escHtml(u.username)}</td>
       <td>${escHtml(u.email)}</td>
-      <td><span class="badge badge-${u.role}">${u.role}</span></td>
+      <td><span class="badge badge-${escHtml(u.role)}">${escHtml(u.role)}</span></td>
       <td><span class="badge ${u.is_active ? 'badge-active' : 'badge-revoked'}">${u.is_active ? 'Active' : 'Inactive'}</span></td>
       <td style="font-size:0.8rem">${u.last_login ? new Date(u.last_login).toLocaleDateString() : 'Never'}</td>
       <td>
-        <button class="btn btn-sm btn-danger" onclick="deleteUser(${u.id})" ${u.id === (currentUser?.id) ? 'disabled' : ''}>
+        <button class="btn btn-sm btn-danger user-delete-btn" data-id="${Number(u.id)}" ${u.id === (currentUser?.id) ? 'disabled' : ''}>
           <i class="fa fa-trash"></i>
         </button>
       </td>
     </tr>
   `).join('');
+
+  // Attach event listeners after rendering
+  tbody.querySelectorAll('.user-delete-btn').forEach(btn => {
+    btn.addEventListener('click', () => deleteUser(btn.dataset.id));
+  });
 }
 
 async function deleteUser(id) {

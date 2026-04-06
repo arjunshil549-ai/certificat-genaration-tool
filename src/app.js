@@ -80,8 +80,8 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Serve frontend for unknown routes (except API)
-app.get('*', (req, res) => {
+// Serve frontend for unknown routes (except API) — rate limited
+app.get('*', frontendLimiter, (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 

@@ -7,6 +7,7 @@ const { generateCertId, formatDate, paginate } = require('../utils/helpers');
 const config = require('../config/config');
 const logger = require('../utils/logger');
 const fs = require('fs');
+const path = require('path');
 
 const generateCertificateHandler = async (req, res, next) => {
   try {
@@ -73,39 +74,42 @@ const batchGenerate = async (req, res, next) => {
     }
 
     const { template_id, issued_by } = req.body;
-    const filePath = req.file.path;
     const originalname = req.file.originalname.toLowerCase();
     const mimetype = req.file.mimetype;
 
     // Validate that the file path is within the uploads directory (path injection prevention)
     const uploadDir = path.resolve(process.cwd(), 'uploads');
-    const resolvedPath = path.resolve(filePath);
+    const resolvedPath = path.resolve(req.file.path);
     if (!resolvedPath.startsWith(uploadDir + path.sep) && resolvedPath !== uploadDir) {
-      try { fs.unlinkSync(filePath); } catch (e) { /* ignore */ }
+      try { fs.unlinkSync(resolvedPath); } catch (e) { /* ignore */ }
       return res.status(400).json({ success: false, message: 'Invalid file path' });
     }
+    // Use the validated and resolved path for all file operations
+    const safeFilePath = resolvedPath;
 
     let records;
     if (originalname.endsWith('.csv') || mimetype === 'text/csv') {
-      records = processCSV(filePath);
+      records = processCSV(safeFilePath);
     } else if (
       originalname.endsWith('.xlsx') || originalname.endsWith('.xls') ||
       mimetype.includes('excel') || mimetype.includes('spreadsheet')
     ) {
-      records = await processExcel(filePath);
+      records = await processExcel(safeFilePath);
     } else {
+      try { fs.unlinkSync(safeFilePath); } catch (e) { /* ignore */ }
       return res.status(400).json({ success: false, message: 'Unsupported file format. Use CSV or Excel.' });
     }
 
     const { valid, errors } = validateBatch(records);
     if (valid.length === 0) {
+      try { fs.unlinkSync(safeFilePath); } catch (e) { /* ignore */ }
       return res.status(400).json({ success: false, message: 'No valid records found', data: { errors } });
     }
 
     const results = await generateBatch(valid, template_id, issued_by, req.user ? req.user.id : null);
     const successful = results.filter(r => r.cert);
 
-    try { fs.unlinkSync(filePath); } catch (e) { /* ignore */ }
+    try { fs.unlinkSync(safeFilePath); } catch (e) { /* ignore */ }
 
     if (successful.length === 0) {
       return res.status(500).json({ success: false, message: 'Failed to generate any certificates' });
