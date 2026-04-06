@@ -1,5 +1,8 @@
 const { getDb } = require('../database/db');
 
+// Whitelist of updatable column names for SQL safety
+const UPDATABLE_FIELDS = new Set(['username', 'email', 'password_hash', 'role', 'is_active']);
+
 class UserModel {
   create(data) {
     const db = getDb();
@@ -42,9 +45,14 @@ class UserModel {
 
   update(id, data) {
     const db = getDb();
-    const fields = Object.keys(data).map(k => `${k} = ?`).join(', ');
+    // Only allow whitelisted field names to prevent SQL injection via column names
+    const safeData = Object.fromEntries(
+      Object.entries(data).filter(([k]) => UPDATABLE_FIELDS.has(k))
+    );
+    if (Object.keys(safeData).length === 0) return this.findById(id);
+    const fields = Object.keys(safeData).map(k => `${k} = ?`).join(', ');
     db.prepare(`UPDATE users SET ${fields}, updated_at = datetime('now') WHERE id = ?`).run(
-      ...Object.values(data),
+      ...Object.values(safeData),
       id
     );
     return this.findById(id);

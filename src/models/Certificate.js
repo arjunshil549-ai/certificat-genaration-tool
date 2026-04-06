@@ -1,5 +1,11 @@
 const { getDb } = require('../database/db');
 
+// Whitelist of updatable column names for SQL safety
+const UPDATABLE_FIELDS = new Set([
+  'recipient_name', 'recipient_email', 'course_name', 'issue_date', 'expiry_date',
+  'issued_by', 'template_id', 'pdf_path', 'qr_code', 'status',
+]);
+
 class CertificateModel {
   create(data) {
     const db = getDb();
@@ -63,8 +69,13 @@ class CertificateModel {
 
   update(id, data) {
     const db = getDb();
-    const fields = Object.keys(data).map(k => `${k} = ?`).join(', ');
-    db.prepare(`UPDATE certificates SET ${fields} WHERE id = ?`).run(...Object.values(data), id);
+    // Only allow whitelisted field names to prevent SQL injection via column names
+    const safeData = Object.fromEntries(
+      Object.entries(data).filter(([k]) => UPDATABLE_FIELDS.has(k))
+    );
+    if (Object.keys(safeData).length === 0) return this.findById(id);
+    const fields = Object.keys(safeData).map(k => `${k} = ?`).join(', ');
+    db.prepare(`UPDATE certificates SET ${fields} WHERE id = ?`).run(...Object.values(safeData), id);
     return this.findById(id);
   }
 

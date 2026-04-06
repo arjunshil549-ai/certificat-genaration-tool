@@ -77,15 +77,16 @@ const batchGenerate = async (req, res, next) => {
     const originalname = req.file.originalname.toLowerCase();
     const mimetype = req.file.mimetype;
 
-    // Validate that the file path is within the uploads directory (path injection prevention)
+    // Safely reconstruct the file path using only the basename from multer's path,
+    // joined with the known-safe uploads directory. This prevents path traversal.
     const uploadDir = path.resolve(process.cwd(), 'uploads');
-    const resolvedPath = path.resolve(req.file.path);
-    if (!resolvedPath.startsWith(uploadDir + path.sep) && resolvedPath !== uploadDir) {
-      try { fs.unlinkSync(resolvedPath); } catch (e) { /* ignore */ }
+    const safeFilePath = path.join(uploadDir, path.basename(req.file.path));
+
+    // Verify the resulting path is still within uploads (belt-and-suspenders)
+    if (!safeFilePath.startsWith(uploadDir + path.sep)) {
+      try { fs.unlinkSync(safeFilePath); } catch (e) { /* ignore */ }
       return res.status(400).json({ success: false, message: 'Invalid file path' });
     }
-    // Use the validated and resolved path for all file operations
-    const safeFilePath = resolvedPath;
 
     let records;
     if (originalname.endsWith('.csv') || mimetype === 'text/csv') {

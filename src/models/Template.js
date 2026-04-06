@@ -1,5 +1,8 @@
 const { getDb } = require('../database/db');
 
+// Whitelist of updatable column names for SQL safety
+const UPDATABLE_FIELDS = new Set(['name', 'description', 'config', 'is_active']);
+
 class TemplateModel {
   create(data) {
     const db = getDb();
@@ -35,7 +38,11 @@ class TemplateModel {
 
   update(id, data) {
     const db = getDb();
-    const updateData = { ...data };
+    // Only allow whitelisted field names to prevent SQL injection via column names
+    const updateData = Object.fromEntries(
+      Object.entries(data).filter(([k]) => UPDATABLE_FIELDS.has(k))
+    );
+    if (Object.keys(updateData).length === 0) return this.findById(id);
     if (updateData.config && typeof updateData.config === 'object') {
       updateData.config = JSON.stringify(updateData.config);
     }
