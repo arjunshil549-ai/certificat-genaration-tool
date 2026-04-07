@@ -41,7 +41,6 @@ async function parseApiResponse(res) {
   if (!text) return {};
 
   const plainText = text
-    .replace(/<[^>]*>/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, MAX_API_ERROR_MESSAGE_LENGTH);
@@ -70,6 +69,7 @@ async function loadTemplates() {
     const res = await fetch(`${API}/templates`, { headers: { Authorization: `Bearer ${token}` } });
     if (!res.ok) return;
     const parsed = await parseApiResponse(res);
+    if (parsed && parsed.success === false && !parsed.data) return;
     const data = Array.isArray(parsed.data) ? parsed.data : [];
     const select = document.getElementById('templateSelect');
     if (select && data) {
