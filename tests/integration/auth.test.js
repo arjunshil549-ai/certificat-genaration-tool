@@ -11,6 +11,12 @@ afterAll(() => {
 });
 
 describe('Auth API', () => {
+  test('GET /admin - serves admin dashboard page', async () => {
+    const res = await request(app).get('/admin');
+    expect(res.status).toBe(200);
+    expect(res.text).toContain('Admin Dashboard');
+  });
+
   test('POST /api/auth/login - success', async () => {
     const res = await request(app)
       .post('/api/auth/login')
