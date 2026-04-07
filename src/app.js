@@ -80,6 +80,11 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Admin route aliases
+app.get(['/admin', '/admin/'], frontendLimiter, (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/admin.html'));
+});
+
 // Serve frontend for unknown routes (except API) — rate limited
 app.get('*', frontendLimiter, (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));

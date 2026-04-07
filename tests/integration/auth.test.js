@@ -10,6 +10,15 @@ afterAll(() => {
   closeDb();
 });
 
+describe('Admin routes', () => {
+  test.each(['/admin', '/admin/'])('GET %s - serves admin dashboard page', async (path) => {
+    const res = await request(app).get(path);
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toMatch(/html/);
+    expect(res.text).toContain('Admin Dashboard');
+  });
+});
+
 describe('Auth API', () => {
   test('POST /api/auth/login - success', async () => {
     const res = await request(app)
