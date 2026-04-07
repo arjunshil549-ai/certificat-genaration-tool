@@ -68,11 +68,11 @@ async function loadTemplates() {
     if (!token) return;
     const res = await fetch(`${API}/templates`, { headers: { Authorization: `Bearer ${token}` } });
     if (!res.ok) return;
-    const parsed = await parseApiResponse(res);
+    const parsed = (await parseApiResponse(res)) || {};
     if (parsed && parsed.success === false && !parsed.data) return;
     const data = Array.isArray(parsed.data) ? parsed.data : [];
     const select = document.getElementById('templateSelect');
-    if (select && data) {
+    if (select && data.length > 0) {
       data.forEach(t => {
         const opt = document.createElement('option');
         opt.value = t.id;
