@@ -25,6 +25,32 @@ function showToast(message, type = 'info') {
   setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 4000);
 }
 
+async function parseApiResponse(res) {
+  const contentType = res.headers.get('content-type') || '';
+
+  if (contentType.includes('application/json')) {
+    try {
+      return await res.json();
+    } catch (_) {
+      // Fall through to text parsing
+    }
+  }
+
+  const text = await res.text();
+  if (!text) return {};
+
+  const plainText = text
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 200);
+
+  return {
+    success: false,
+    message: plainText || `Unexpected non-JSON response (status ${res.status})`,
+  };
+}
+
 // ─── Live Preview ──────────────────────────────────────────────────────────
 function updatePreview() {
   const name = document.getElementById('recipientName').value || 'Your Name Here';
@@ -42,7 +68,8 @@ async function loadTemplates() {
     if (!token) return;
     const res = await fetch(`${API}/templates`, { headers: { Authorization: `Bearer ${token}` } });
     if (!res.ok) return;
-    const { data } = await res.json();
+    const parsed = await parseApiResponse(res);
+    const data = parsed.data;
     const select = document.getElementById('templateSelect');
     if (select && data) {
       data.forEach(t => {
@@ -81,7 +108,7 @@ document.getElementById('certForm').addEventListener('submit', async (e) => {
       body: JSON.stringify(body),
     });
 
-    const data = await res.json();
+    const data = await parseApiResponse(res);
 
     if (!res.ok || !data.success) {
       throw new Error(data.message || 'Failed to generate certificate');
@@ -169,7 +196,7 @@ document.getElementById('verifyForm').addEventListener('submit', async (e) => {
 
   try {
     const res = await fetch(`${API}/certificates/verify/${encodeURIComponent(certId)}`);
-    const data = await res.json();
+    const data = await parseApiResponse(res);
 
     if (res.status === 404 || !data.success) {
       resultDiv.className = 'verify-result invalid';
