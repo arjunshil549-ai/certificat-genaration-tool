@@ -1,5 +1,6 @@
 /* FalconSec Certificate Platform – Public Page JS */
 const API = '/api';
+const MAX_API_ERROR_MESSAGE_LENGTH = 200;
 let lastGeneratedCert = null;
 let lastPdfDownloadId = null;
 
@@ -31,7 +32,7 @@ async function parseApiResponse(res) {
   if (contentType.includes('application/json')) {
     try {
       return await res.json();
-    } catch (_) {
+    } catch (jsonError) {
       // Fall through to text parsing
     }
   }
@@ -43,7 +44,7 @@ async function parseApiResponse(res) {
     .replace(/<[^>]*>/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
-    .slice(0, 200);
+    .slice(0, MAX_API_ERROR_MESSAGE_LENGTH);
 
   return {
     success: false,
@@ -69,7 +70,7 @@ async function loadTemplates() {
     const res = await fetch(`${API}/templates`, { headers: { Authorization: `Bearer ${token}` } });
     if (!res.ok) return;
     const parsed = await parseApiResponse(res);
-    const data = parsed.data;
+    const data = Array.isArray(parsed.data) ? parsed.data : [];
     const select = document.getElementById('templateSelect');
     if (select && data) {
       data.forEach(t => {
