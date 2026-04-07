@@ -14,6 +14,7 @@ describe('Auth API', () => {
   test.each(['/admin', '/admin/'])('GET %s - serves admin dashboard page', async (path) => {
     const res = await request(app).get(path);
     expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toMatch(/html/);
     expect(res.text).toContain('Admin Dashboard');
   });
 
