@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FalconSec Admin Dashboard</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body class="admin-body">
+
+  <!-- Login Screen -->
+  <div id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <div class="login-logo">
+        <i class="fa fa-shield-halved"></i>
+        <h2>FalconSec Intelligence</h2>
+        <p>Admin Dashboard</p>
+      </div>
+      <form id="loginForm">
+        <div class="form-group">
+          <label><i class="fa fa-user"></i> Username</label>
+          <input type="text" id="loginUsername" placeholder="admin" required />
+        </div>
+        <div class="form-group">
+          <label><i class="fa fa-lock"></i> Password</label>
+          <input type="password" id="loginPassword" placeholder="••••••••" required />
+        </div>
+        <button type="submit" class="btn btn-primary btn-full" id="loginBtn">
+          <i class="fa fa-sign-in-alt"></i> Sign In
+        </button>
+        <div id="loginError" class="alert alert-error" style="display:none"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Admin Dashboard -->
+  <div id="adminApp" class="admin-app" style="display:none">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <i class="fa fa-shield-halved"></i>
+        <span>FalconSec</span>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-section="dashboard">
+          <i class="fa fa-tachometer-alt"></i> Dashboard
+        </a>
+        <a href="#" class="nav-item" data-section="certificates">
+          <i class="fa fa-certificate"></i> Certificates
+        </a>
+        <a href="#" class="nav-item" data-section="batch">
+          <i class="fa fa-upload"></i> Batch Upload
+        </a>
+        <a href="#" class="nav-item" data-section="templates">
+          <i class="fa fa-palette"></i> Templates
+        </a>
+        <a href="#" class="nav-item admin-only" data-section="users">
+          <i class="fa fa-users"></i> Users
+        </a>
+        <a href="#" class="nav-item" data-section="emailLogs">
+          <i class="fa fa-envelope"></i> Email Logs
+        </a>
+        <div class="sidebar-divider"></div>
+        <a href="/" class="nav-item">
+          <i class="fa fa-home"></i> Public Site
+        </a>
+        <a href="#" class="nav-item" id="logoutBtn">
+          <i class="fa fa-sign-out-alt"></i> Logout
+        </a>
+      </nav>
+      <div class="sidebar-user">
+        <i class="fa fa-user-circle"></i>
+        <div>
+          <div id="sidebarUsername">—</div>
+          <div id="sidebarRole" class="sidebar-role">—</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+      <header class="admin-header">
+        <button class="sidebar-toggle" id="sidebarToggle"><i class="fa fa-bars"></i></button>
+        <h1 id="pageTitle">Dashboard</h1>
+        <div class="header-actions">
+          <button class="btn btn-primary btn-sm" onclick="AdminApp.showSection('certificates')">
+            <i class="fa fa-plus"></i> New Certificate
+          </button>
+        </div>
+      </header>
+
+      <!-- Dashboard Section -->
+      <section id="section-dashboard" class="admin-section">
+        <div class="stats-grid">
+          <div class="stat-card primary">
+            <div class="stat-icon"><i class="fa fa-certificate"></i></div>
+            <div class="stat-info">
+              <div class="stat-value" id="statTotal">—</div>
+              <div class="stat-label">Total Certificates</div>
+            </div>
+          </div>
+          <div class="stat-card success">
+            <div class="stat-icon"><i class="fa fa-calendar-check"></i></div>
+            <div class="stat-info">
+              <div class="stat-value" id="statMonth">—</div>
+              <div class="stat-label">This Month</div>
+            </div>
+          </div>
+          <div class="stat-card warning">
+            <div class="stat-icon"><i class="fa fa-envelope"></i></div>
+            <div class="stat-info">
+              <div class="stat-value" id="statEmails">—</div>
+              <div class="stat-label">Emails Sent</div>
+            </div>
+          </div>
+          <div class="stat-card info">
+            <div class="stat-icon"><i class="fa fa-users"></i></div>
+            <div class="stat-info">
+              <div class="stat-value" id="statUsers">—</div>
+              <div class="stat-label">Active Users</div>
+            </div>
+          </div>
+        </div>
+        <div class="dashboard-charts">
+          <div class="card chart-card">
+            <h3>Certificate Status</h3>
+            <canvas id="statusChart" height="200"></canvas>
+          </div>
+          <div class="card recent-card">
+            <h3>Recent Certificates</h3>
+            <div id="recentCerts" class="recent-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Certificates Section -->
+      <section id="section-certificates" class="admin-section" style="display:none">
+        <div class="section-toolbar">
+          <div class="search-bar">
+            <i class="fa fa-search"></i>
+            <input type="text" id="certSearch" placeholder="Search certificates..." />
+          </div>
+          <select id="certStatusFilter" class="filter-select">
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="revoked">Revoked</option>
+            <option value="expired">Expired</option>
+          </select>
+          <button class="btn btn-primary btn-sm" id="newCertBtn"><i class="fa fa-plus"></i> New Certificate</button>
+        </div>
+
+        <!-- New Certificate Form -->
+        <div id="newCertForm" class="card" style="display:none">
+          <h3>Generate New Certificate</h3>
+          <form id="adminCertForm" class="cert-form">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Recipient Name *</label>
+                <input type="text" name="recipient_name" required />
+              </div>
+              <div class="form-group">
+                <label>Recipient Email *</label>
+                <input type="email" name="recipient_email" required />
+              </div>
+              <div class="form-group">
+                <label>Course / Achievement *</label>
+                <input type="text" name="course_name" required />
+              </div>
+              <div class="form-group">
+                <label>Issue Date</label>
+                <input type="date" name="issue_date" />
+              </div>
+              <div class="form-group">
+                <label>Issued By</label>
+                <input type="text" name="issued_by" placeholder="FalconSec Intelligence" />
+              </div>
+              <div class="form-group">
+                <label>Template</label>
+                <select name="template_id" id="adminTemplateSelect">
+                  <option value="">Default</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">Generate Certificate</button>
+              <button type="button" class="btn btn-secondary" id="cancelCertBtn">Cancel</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="table-responsive">
+            <table class="data-table" id="certsTable">
+              <thead>
+                <tr>
+                  <th>Cert ID</th>
+                  <th>Recipient</th>
+                  <th>Course</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="certsTableBody">
+                <tr><td colspan="6" class="loading-cell"><i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="certsPagination" class="pagination"></div>
+        </div>
+      </section>
+
+      <!-- Batch Upload Section -->
+      <section id="section-batch" class="admin-section" style="display:none">
+        <div class="card">
+          <h3><i class="fa fa-upload"></i> Batch Certificate Upload</h3>
+          <p class="text-muted">Upload a CSV or Excel file with recipient data to generate multiple certificates at once.</p>
+
+          <div class="batch-info">
+            <h4>Required Columns:</h4>
+            <ul>
+              <li><code>name</code> — Recipient's full name</li>
+              <li><code>email</code> — Recipient's email address</li>
+              <li><code>course</code> — Course or achievement name</li>
+              <li><em>Optional:</em> <code>issued_by</code>, <code>issue_date</code></li>
+            </ul>
+          </div>
+
+          <form id="batchForm">
+            <div class="form-group">
+              <label><i class="fa fa-file-csv"></i> Upload File (CSV or Excel)</label>
+              <div class="file-drop-zone" id="dropZone">
+                <i class="fa fa-cloud-upload-alt"></i>
+                <p>Drag & drop your file here, or <label for="batchFile" class="link">browse</label></p>
+                <input type="file" id="batchFile" accept=".csv,.xlsx,.xls" style="display:none" />
+                <p class="file-name" id="fileName">No file selected</p>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Issued By (optional override)</label>
+              <input type="text" id="batchIssuedBy" placeholder="FalconSec Intelligence" />
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg" id="batchSubmitBtn">
+              <i class="fa fa-cogs"></i> Generate All Certificates
+            </button>
+          </form>
+
+          <div id="batchProgress" class="batch-progress" style="display:none">
+            <div class="progress-bar-container">
+              <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <p id="progressText">Processing...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Templates Section -->
+      <section id="section-templates" class="admin-section" style="display:none">
+        <div class="section-toolbar">
+          <h3>Certificate Templates</h3>
+          <button class="btn btn-primary btn-sm" id="newTemplateBtn"><i class="fa fa-plus"></i> New Template</button>
+        </div>
+        <div id="templatesGrid" class="templates-grid">
+          <div class="loading-state"><i class="fa fa-spinner fa-spin"></i> Loading templates...</div>
+        </div>
+      </section>
+
+      <!-- Users Section -->
+      <section id="section-users" class="admin-section" style="display:none">
+        <div class="section-toolbar">
+          <h3>User Management</h3>
+          <button class="btn btn-primary btn-sm" id="newUserBtn"><i class="fa fa-plus"></i> New User</button>
+        </div>
+        <div class="card">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Username</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Last Login</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody">
+                <tr><td colspan="6" class="loading-cell"><i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Email Logs Section -->
+      <section id="section-emailLogs" class="admin-section" style="display:none">
+        <div class="card">
+          <h3><i class="fa fa-envelope-open-text"></i> Email Logs</h3>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Recipient</th>
+                  <th>Status</th>
+                  <th>Sent At</th>
+                  <th>Error</th>
+                </tr>
+              </thead>
+              <tbody id="emailLogsBody">
+                <tr><td colspan="5" class="loading-cell"><i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Generic Modal -->
+  <div id="genericModal" class="modal-overlay" style="display:none">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modalTitle">Modal</h3>
+        <button class="modal-close" onclick="document.getElementById('genericModal').style.display='none'">&times;</button>
+      </div>
+      <div class="modal-body" id="genericModalBody"></div>
+      <div class="modal-footer" id="genericModalFooter"></div>
+    </div>
+  </div>
+
+  <script src="/js/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FalconSec Intelligence – Certificate Platform</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <i class="fa fa-shield-halved"></i>
+      <span>FalconSec Intelligence</span>
+    </div>
+    <div class="navbar-links">
+      <a href="#generate">Generate</a>
+      <a href="#verify">Verify</a>
+      <a href="/admin.html" class="btn btn-outline-light btn-sm">Admin Panel</a>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="hero">
+    <div class="hero-content">
+      <div class="hero-badge"><i class="fa fa-certificate"></i> Professional Certificate Platform</div>
+      <h1>FalconSec Intelligence<br/><span class="accent">Certificate Generator</span></h1>
+      <p>Issue, manage, and verify professional cybersecurity certificates with ease.</p>
+      <a href="#generate" class="btn btn-primary btn-lg"><i class="fa fa-plus-circle"></i> Generate Certificate</a>
+      <a href="#verify" class="btn btn-outline btn-lg"><i class="fa fa-search"></i> Verify Certificate</a>
+    </div>
+    <div class="hero-visual">
+      <div class="cert-preview-card">
+        <div class="cert-preview-header">
+          <div class="cert-preview-logo"><i class="fa fa-shield-halved"></i></div>
+          <div>
+            <div class="cert-preview-org">FALCONSEC INTELLIGENCE</div>
+            <div class="cert-preview-title">Certificate of Completion</div>
+          </div>
+        </div>
+        <div class="cert-preview-body">
+          <div class="cert-preview-label">Awarded to</div>
+          <div class="cert-preview-name" id="previewName">Your Name Here</div>
+          <div class="cert-preview-course" id="previewCourse">Course Name</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Generate Certificate Section -->
+    <section id="generate" class="section">
+      <div class="section-header">
+        <h2><i class="fa fa-file-certificate"></i> Generate Certificate</h2>
+        <p>Fill in the details below to generate a professional certificate.</p>
+      </div>
+      <div class="card">
+        <form id="certForm" class="cert-form">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="recipientName"><i class="fa fa-user"></i> Recipient Name <span class="required">*</span></label>
+              <input type="text" id="recipientName" name="recipient_name" placeholder="John Doe" required />
+            </div>
+            <div class="form-group">
+              <label for="recipientEmail"><i class="fa fa-envelope"></i> Recipient Email <span class="required">*</span></label>
+              <input type="email" id="recipientEmail" name="recipient_email" placeholder="john@example.com" required />
+            </div>
+            <div class="form-group">
+              <label for="courseName"><i class="fa fa-book"></i> Course / Achievement <span class="required">*</span></label>
+              <input type="text" id="courseName" name="course_name" placeholder="Ethical Hacking Fundamentals" required />
+            </div>
+            <div class="form-group">
+              <label for="issueDate"><i class="fa fa-calendar"></i> Issue Date</label>
+              <input type="date" id="issueDate" name="issue_date" />
+            </div>
+            <div class="form-group">
+              <label for="issuedBy"><i class="fa fa-building"></i> Issued By</label>
+              <input type="text" id="issuedBy" name="issued_by" placeholder="FalconSec Intelligence" />
+            </div>
+            <div class="form-group">
+              <label for="templateSelect"><i class="fa fa-palette"></i> Template</label>
+              <select id="templateSelect" name="template_id">
+                <option value="">Default Template</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-lg" id="generateBtn">
+              <i class="fa fa-file-pdf"></i> Generate Certificate
+            </button>
+            <button type="button" class="btn btn-secondary btn-lg" id="downloadBtn" style="display:none">
+              <i class="fa fa-download"></i> Download PDF
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- Verify Certificate Section -->
+    <section id="verify" class="section">
+      <div class="section-header">
+        <h2><i class="fa fa-shield-check"></i> Verify Certificate</h2>
+        <p>Enter a Certificate ID to verify its authenticity.</p>
+      </div>
+      <div class="card">
+        <form id="verifyForm" class="verify-form">
+          <div class="form-group verify-input-group">
+            <label for="certIdInput"><i class="fa fa-id-card"></i> Certificate ID</label>
+            <div class="input-with-button">
+              <input type="text" id="certIdInput" placeholder="CERT-202401-XXXXXX" />
+              <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i> Verify</button>
+            </div>
+          </div>
+        </form>
+        <div id="verifyResult" class="verify-result" style="display:none"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Success Modal -->
+  <div id="successModal" class="modal-overlay" style="display:none">
+    <div class="modal">
+      <div class="modal-header success">
+        <i class="fa fa-check-circle"></i>
+        <h3>Certificate Generated!</h3>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="modalDownloadBtn"><i class="fa fa-download"></i> Download PDF</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('successModal').style.display='none'">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <i class="fa fa-shield-halved"></i>
+        <span>FalconSec Intelligence</span>
+      </div>
+      <p>Professional Certificate Generation Platform &copy; 2024</p>
+      <div class="footer-links">
+        <a href="/api-docs" target="_blank"><i class="fa fa-book"></i> API Docs</a>
+        <a href="/health"><i class="fa fa-heartbeat"></i> Health</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>
